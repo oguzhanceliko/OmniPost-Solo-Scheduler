@@ -80,9 +80,17 @@ export function AccountsModal({
         }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || 'Hesap eklenemedi.');
+      }
+
+      if (data.account) {
+        try {
+          const existing = JSON.parse(localStorage.getItem('omnipost_accounts_backup') || '[]');
+          const updated = [...existing.filter((a: any) => a.id !== data.account.id), data.account];
+          localStorage.setItem('omnipost_accounts_backup', JSON.stringify(updated));
+        } catch {}
       }
 
       // Reset
@@ -112,6 +120,11 @@ export function AccountsModal({
         method: 'DELETE',
       });
       if (res.ok) {
+        try {
+          const existing = JSON.parse(localStorage.getItem('omnipost_accounts_backup') || '[]');
+          const updated = existing.filter((a: any) => a.id !== id);
+          localStorage.setItem('omnipost_accounts_backup', JSON.stringify(updated));
+        } catch {}
         onRefresh();
       }
     } finally {

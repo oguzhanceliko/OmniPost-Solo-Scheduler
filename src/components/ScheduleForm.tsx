@@ -149,6 +149,15 @@ export function ScheduleForm({
         throw new Error(data.error || 'Gönderi oluşturulamadı.');
       }
 
+      // Yeni oluşturulan gönderiyi anında yerel hafızaya yaz (F5 atılsa dahi kaybolmasın)
+      if (data.post) {
+        try {
+          const existing = JSON.parse(localStorage.getItem('omnipost_posts_backup') || '[]');
+          const updated = [data.post, ...existing.filter((p: any) => p.id !== data.post.id)];
+          localStorage.setItem('omnipost_posts_backup', JSON.stringify(updated));
+        } catch {}
+      }
+
       // Eğer "Hemen Yayınla" tıklandıysa, anında API'yi tetikle
       if (publishImmediately && data.post?.id) {
         await fetch('/api/posts/publish', {

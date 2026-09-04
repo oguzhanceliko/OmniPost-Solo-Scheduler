@@ -22,13 +22,41 @@ export default function DashboardClient() {
   const [isAccountsModalOpen, setIsAccountsModalOpen] = useState<boolean>(false);
   const [isDownloaderModalOpen, setIsDownloaderModalOpen] = useState<boolean>(false);
 
-  // Sayfa yüklendiğinde taslak video ve yerel yedekleri yükle
+  // Başlangıçta yerel depodaki hesap ve gönderileri yükle
   useEffect(() => {
     try {
-      const savedUrl = localStorage.getItem('omnipost_draft_video_url');
-      const savedKey = localStorage.getItem('omnipost_draft_video_key');
-      if (savedUrl) setUploadedUrl(savedUrl);
-      if (savedKey) setUploadedKey(savedKey);
+      const savedAccounts = localStorage.getItem('omnipost_accounts_backup');
+      if (savedAccounts) {
+        const parsed = JSON.parse(savedAccounts);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setAccounts(parsed);
+        }
+      } else {
+        // Önceden bağlanmış varsayılan TikTok hesabını yerel depoya kaydet
+        const initialAcc: Account = {
+          id: 'tiktok_z1futbolresmi',
+          platform: 'TIKTOK',
+          name: '@z1futbolresmi (TikTok)',
+          credentials: {
+            tiktokAccessToken: 'act.326FRsee22tBeivlopcsUC0PhWCp2XLvgkKFfXeKf9VGd0hWjlBRi1owjJZN!6355.s1',
+            refreshToken: 'rft.YSg7ILt4Xrz9XNYpYFB7e5apMUHtNtgpDoASB8tfOquHwqZ7NDgV072RVb2m!6283.s1',
+            openId: '-0007lohXrDUHIOFkq1yYauOBNqh409TNJyp',
+          },
+          is_active: true,
+          created_at: new Date().toISOString(),
+        };
+        setAccounts([initialAcc]);
+        localStorage.setItem('omnipost_accounts_backup', JSON.stringify([initialAcc]));
+      }
+
+      const savedPosts = localStorage.getItem('omnipost_posts_backup');
+      if (savedPosts) {
+        const parsedPosts = JSON.parse(savedPosts);
+        if (Array.isArray(parsedPosts) && parsedPosts.length > 0) {
+          setPosts(parsedPosts);
+          setIsLoadingPosts(false);
+        }
+      }
     } catch {}
   }, []);
 
@@ -44,22 +72,16 @@ export default function DashboardClient() {
             localStorage.setItem('omnipost_posts_backup', JSON.stringify(serverPosts));
           } catch {}
         } else {
-          // Eğer sunucu /tmp yeniden başladığı için boş döndüyse, localStorage'dan geri yükle
+          // Eğer sunucu Vercel container yeniden başladığı için boş döndüyse, localStorage'dan geri yükle
           try {
             const backup = localStorage.getItem('omnipost_posts_backup');
             if (backup) {
               const localPosts = JSON.parse(backup);
               if (Array.isArray(localPosts) && localPosts.length > 0) {
                 setPosts(localPosts);
-              } else {
-                setPosts([]);
               }
-            } else {
-              setPosts([]);
             }
-          } catch {
-            setPosts([]);
-          }
+          } catch {}
         }
       }
     } catch (err) {
@@ -85,14 +107,13 @@ export default function DashboardClient() {
             localStorage.setItem('omnipost_accounts_backup', JSON.stringify(serverAccounts));
           } catch {}
         } else {
-          // Eğer sunucu boş döndüyse, localStorage yedeklerini yükle ve sunucuya geri yaz
+          // Eğer sunucu boş döndüyse, localStorage yedeklerini yükle ve sunucuya sessizce kaydet
           try {
             const backup = localStorage.getItem('omnipost_accounts_backup');
             if (backup) {
               const localAccounts: Account[] = JSON.parse(backup);
               if (Array.isArray(localAccounts) && localAccounts.length > 0) {
                 setAccounts(localAccounts);
-                // Sunucu veritabanına da sessizce geri kaydet (Vercel container yenilenmişse)
                 for (const acc of localAccounts) {
                   fetch('/api/accounts', {
                     method: 'POST',
@@ -125,19 +146,11 @@ export default function DashboardClient() {
   const handleUploadSuccess = (url: string, key: string) => {
     setUploadedUrl(url);
     setUploadedKey(key);
-    try {
-      localStorage.setItem('omnipost_draft_video_url', url);
-      localStorage.setItem('omnipost_draft_video_key', key);
-    } catch {}
   };
 
   const handleClearUpload = () => {
     setUploadedUrl(null);
     setUploadedKey(null);
-    try {
-      localStorage.removeItem('omnipost_draft_video_url');
-      localStorage.removeItem('omnipost_draft_video_key');
-    } catch {}
   };
 
   const handlePostCreated = () => {
