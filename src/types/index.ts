@@ -18,6 +18,7 @@ export interface AccountCredentials {
   instagramAccessToken?: string;
   // TikTok
   tiktokAccessToken?: string;
+  openId?: string;
 }
 
 export interface Account {
