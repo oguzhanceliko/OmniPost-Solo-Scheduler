@@ -10,12 +10,42 @@ export async function publishToTikTok(
   const accessToken = params.accessToken || process.env.TIKTOK_ACCESS_TOKEN;
 
   if (!accessToken) {
-    console.log(`[TikTok Mock] Publishing to TikTok: "${params.caption}" from ${params.videoUrl}`);
-    return { success: true, publishId: `mock_tt_${Date.now()}` };
+    return {
+      success: false,
+      error: 'TikTok Access Token bulunamadı. Lütfen paylaşım yaparken TikTok hesabınızı seçin.',
+    };
   }
 
   try {
-    // TikTok Content Posting API v2: PULL_FROM_URL
+    // 1. Creator info sorgulayarak izin verilen gizlilik seviyesini bul (Sandbox için genellikle SELF_ONLY gereklidir)
+    let privacyLevel = 'SELF_ONLY';
+    try {
+      const creatorRes = await fetch(
+        'https://open.tiktokapis.com/v2/post/publish/creator_info/query/',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+        }
+      );
+      const creatorData = await creatorRes.json();
+      const options = creatorData?.data?.privacy_level_options;
+      if (Array.isArray(options) && options.length > 0) {
+        if (options.includes('PUBLIC_TO_EVERYONE')) {
+          privacyLevel = 'PUBLIC_TO_EVERYONE';
+        } else if (options.includes('MUTUAL_FOLLOW_FRIENDS')) {
+          privacyLevel = 'MUTUAL_FOLLOW_FRIENDS';
+        } else if (options.includes('SELF_ONLY')) {
+          privacyLevel = 'SELF_ONLY';
+        }
+      }
+    } catch (cErr) {
+      console.warn('[TikTok Creator Info Query]', cErr);
+    }
+
+    // 2. TikTok Content Posting API v2: PULL_FROM_URL
     const res = await fetch(
       'https://open.tiktokapis.com/v2/post/publish/video/init/',
       {
@@ -27,7 +57,7 @@ export async function publishToTikTok(
         body: JSON.stringify({
           post_info: {
             title: params.caption.slice(0, 150),
-            privacy_level: 'PUBLIC_TO_EVERYONE',
+            privacy_level: privacyLevel,
             disable_duet: false,
             disable_comment: false,
             disable_stitch: false,
@@ -43,7 +73,7 @@ export async function publishToTikTok(
 
     const data = await res.json();
     if (!res.ok || data.error?.code !== 'ok') {
-      const errMsg = data.error?.message || data.message || 'TikTok API hatası';
+      const errMsg = data.error?.message || data.message || `TikTok API hatası (Kod: ${data.error?.code || res.status})`;
       throw new Error(errMsg);
     }
 
