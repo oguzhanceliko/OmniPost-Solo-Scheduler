@@ -45,8 +45,27 @@ export async function publishToTikTok(
       console.warn('[TikTok Creator Info Query]', cErr);
     }
 
-    // 2. TikTok Content Posting API v2: PULL_FROM_URL
-    const res = await fetch(
+    // 2. Videoyu indir ve buffer al (TikTok FILE_UPLOAD doğrudan dosya yükleme gerektirir, URL doğrulaması istemez)
+    const videoRes = await fetch(params.videoUrl);
+    if (!videoRes.ok) {
+      throw new Error(`Video dosyası indirilemedi (HTTP ${videoRes.status})`);
+    }
+    const arrayBuffer = await videoRes.arrayBuffer();
+    const videoBuffer = Buffer.from(arrayBuffer);
+    const totalBytes = videoBuffer.length;
+
+    if (totalBytes === 0) {
+      throw new Error('Video dosyası boş (0 byte).');
+    }
+
+    // 3. TikTok Content Posting API v2: FILE_UPLOAD
+    // TikTok: 64 MB'a kadar tek parça (single chunk) upload destekler.
+    const CHUNK_SIZE = 10 * 1024 * 1024; // 10 MB chunks if > 64 MB
+    const isSingleChunk = totalBytes <= 64 * 1024 * 1024;
+    const chunkSize = isSingleChunk ? totalBytes : CHUNK_SIZE;
+    const totalChunkCount = isSingleChunk ? 1 : Math.floor(totalBytes / chunkSize);
+
+    const initRes = await fetch(
       'https://open.tiktokapis.com/v2/post/publish/video/init/',
       {
         method: 'POST',
@@ -64,21 +83,73 @@ export async function publishToTikTok(
             video_cover_timestamp_ms: 1000,
           },
           source_info: {
-            source: 'PULL_FROM_URL',
-            video_url: params.videoUrl,
+            source: 'FILE_UPLOAD',
+            video_size: totalBytes,
+            chunk_size: chunkSize,
+            total_chunk_count: totalChunkCount,
           },
         }),
       }
     );
 
-    const data = await res.json();
-    if (!res.ok || data.error?.code !== 'ok') {
-      const errMsg = data.error?.message || data.message || `TikTok API hatası (Kod: ${data.error?.code || res.status})`;
+    const initData = await initRes.json();
+    if (!initRes.ok || initData.error?.code !== 'ok') {
+      const errMsg =
+        initData.error?.message ||
+        initData.message ||
+        `TikTok API Başlatma Hatası (Kod: ${initData.error?.code || initRes.status})`;
       throw new Error(errMsg);
     }
 
-    const publishId = data.data?.publish_id || `tt_${Date.now()}`;
-    return { success: true, publishId };
+    const uploadUrl = initData.data?.upload_url;
+    const publishId = initData.data?.publish_id;
+
+    if (!uploadUrl) {
+      throw new Error('TikTok upload_url sağlamadı.');
+    }
+
+    // 4. Video dosyasını TikTok upload_url'e aktar
+    if (isSingleChunk) {
+      const putRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'video/mp4',
+          'Content-Length': `${totalBytes}`,
+          'Content-Range': `bytes 0-${totalBytes - 1}/${totalBytes}`,
+        },
+        body: videoBuffer,
+      });
+
+      if (!putRes.ok && putRes.status !== 201 && putRes.status !== 200) {
+        const errText = await putRes.text();
+        throw new Error(`Video TikTok sunucusuna yüklenemedi (HTTP ${putRes.status}): ${errText}`);
+      }
+    } else {
+      // Çoklu chunk yükleme
+      for (let i = 0; i < totalChunkCount; i++) {
+        const start = i * chunkSize;
+        const end = i === totalChunkCount - 1 ? totalBytes : (i + 1) * chunkSize;
+        const chunk = videoBuffer.subarray(start, end);
+        const chunkLen = chunk.length;
+
+        const putRes = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'video/mp4',
+            'Content-Length': `${chunkLen}`,
+            'Content-Range': `bytes ${start}-${end - 1}/${totalBytes}`,
+          },
+          body: chunk,
+        });
+
+        if (!putRes.ok && putRes.status !== 201 && putRes.status !== 200) {
+          const errText = await putRes.text();
+          throw new Error(`Chunk ${i + 1}/${totalChunkCount} yüklenemedi: ${errText}`);
+        }
+      }
+    }
+
+    return { success: true, publishId: publishId || `tt_${Date.now()}` };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[TikTok Error]', message);

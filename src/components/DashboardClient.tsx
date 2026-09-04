@@ -22,15 +22,52 @@ export default function DashboardClient() {
   const [isAccountsModalOpen, setIsAccountsModalOpen] = useState<boolean>(false);
   const [isDownloaderModalOpen, setIsDownloaderModalOpen] = useState<boolean>(false);
 
+  // Sayfa yüklendiğinde taslak video ve yerel yedekleri yükle
+  useEffect(() => {
+    try {
+      const savedUrl = localStorage.getItem('omnipost_draft_video_url');
+      const savedKey = localStorage.getItem('omnipost_draft_video_key');
+      if (savedUrl) setUploadedUrl(savedUrl);
+      if (savedKey) setUploadedKey(savedKey);
+    } catch {}
+  }, []);
+
   const fetchPosts = useCallback(async () => {
     try {
       const res = await fetch('/api/posts');
       if (res.ok) {
         const data = await res.json();
-        setPosts(data.posts || []);
+        const serverPosts = data.posts || [];
+        if (serverPosts.length > 0) {
+          setPosts(serverPosts);
+          try {
+            localStorage.setItem('omnipost_posts_backup', JSON.stringify(serverPosts));
+          } catch {}
+        } else {
+          // Eğer sunucu /tmp yeniden başladığı için boş döndüyse, localStorage'dan geri yükle
+          try {
+            const backup = localStorage.getItem('omnipost_posts_backup');
+            if (backup) {
+              const localPosts = JSON.parse(backup);
+              if (Array.isArray(localPosts) && localPosts.length > 0) {
+                setPosts(localPosts);
+              } else {
+                setPosts([]);
+              }
+            } else {
+              setPosts([]);
+            }
+          } catch {
+            setPosts([]);
+          }
+        }
       }
     } catch (err) {
       console.error('Gönderiler yüklenemedi:', err);
+      try {
+        const backup = localStorage.getItem('omnipost_posts_backup');
+        if (backup) setPosts(JSON.parse(backup));
+      } catch {}
     } finally {
       setIsLoadingPosts(false);
     }
@@ -41,10 +78,39 @@ export default function DashboardClient() {
       const res = await fetch('/api/accounts');
       if (res.ok) {
         const data = await res.json();
-        setAccounts(data.accounts || []);
+        const serverAccounts = data.accounts || [];
+        if (serverAccounts.length > 0) {
+          setAccounts(serverAccounts);
+          try {
+            localStorage.setItem('omnipost_accounts_backup', JSON.stringify(serverAccounts));
+          } catch {}
+        } else {
+          // Eğer sunucu boş döndüyse, localStorage yedeklerini yükle ve sunucuya geri yaz
+          try {
+            const backup = localStorage.getItem('omnipost_accounts_backup');
+            if (backup) {
+              const localAccounts: Account[] = JSON.parse(backup);
+              if (Array.isArray(localAccounts) && localAccounts.length > 0) {
+                setAccounts(localAccounts);
+                // Sunucu veritabanına da sessizce geri kaydet (Vercel container yenilenmişse)
+                for (const acc of localAccounts) {
+                  fetch('/api/accounts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(acc),
+                  }).catch(() => {});
+                }
+              }
+            }
+          } catch {}
+        }
       }
     } catch (err) {
       console.error('Hesaplar yüklenemedi:', err);
+      try {
+        const backup = localStorage.getItem('omnipost_accounts_backup');
+        if (backup) setAccounts(JSON.parse(backup));
+      } catch {}
     }
   }, []);
 
@@ -59,11 +125,19 @@ export default function DashboardClient() {
   const handleUploadSuccess = (url: string, key: string) => {
     setUploadedUrl(url);
     setUploadedKey(key);
+    try {
+      localStorage.setItem('omnipost_draft_video_url', url);
+      localStorage.setItem('omnipost_draft_video_key', key);
+    } catch {}
   };
 
   const handleClearUpload = () => {
     setUploadedUrl(null);
     setUploadedKey(null);
+    try {
+      localStorage.removeItem('omnipost_draft_video_url');
+      localStorage.removeItem('omnipost_draft_video_key');
+    } catch {}
   };
 
   const handlePostCreated = () => {

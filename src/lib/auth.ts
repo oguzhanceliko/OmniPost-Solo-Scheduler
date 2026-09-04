@@ -1,10 +1,10 @@
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
-const SESSION_COOKIE_NAME = 'omnipost_admin_session';
+export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+export const SESSION_COOKIE_NAME = 'omnipost_admin_session';
 
-function getExpectedToken(): string {
+export function getExpectedToken(): string {
   return crypto.createHash('sha256').update(ADMIN_PASSWORD + '_omnipost_salt').digest('hex');
 }
 

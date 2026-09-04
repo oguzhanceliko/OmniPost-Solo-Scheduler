@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { login, logout, verifyAuth } from '@/lib/auth';
+import { ADMIN_PASSWORD, SESSION_COOKIE_NAME, getExpectedToken, verifyAuth } from '@/lib/auth';
 
 export async function GET() {
   const authenticated = await verifyAuth();
@@ -9,11 +9,19 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const { password } = await req.json();
-    const success = await login(password);
 
-    if (success) {
-      return NextResponse.json({ success: true });
+    if (password === ADMIN_PASSWORD) {
+      const response = NextResponse.json({ success: true });
+      response.cookies.set(SESSION_COOKIE_NAME, getExpectedToken(), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 60 * 24 * 30, // 30 gün
+      });
+      return response;
     }
+
     return NextResponse.json({ success: false, error: 'Geçersiz şifre' }, { status: 401 });
   } catch {
     return NextResponse.json({ success: false, error: 'Giriş işlemi başarısız' }, { status: 500 });
@@ -21,6 +29,13 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE() {
-  await logout();
-  return NextResponse.json({ success: true });
+  const response = NextResponse.json({ success: true });
+  response.cookies.set(SESSION_COOKIE_NAME, '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  });
+  return response;
 }

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
 import { getPostById } from '@/lib/db';
 import { processPostPublication } from '@/lib/publishers';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   const isAuth = await verifyAuth();

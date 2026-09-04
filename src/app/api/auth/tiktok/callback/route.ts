@@ -50,6 +50,9 @@ export async function GET(req: NextRequest) {
   if (code) {
     let tokenData: any = null;
     let exchangeError = '';
+    let accessToken = '';
+    let refreshToken = '';
+    let openId = '';
 
     try {
       const tokenRes = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
@@ -69,9 +72,9 @@ export async function GET(req: NextRequest) {
 
       tokenData = await tokenRes.json();
 
-      const accessToken = tokenData?.access_token || tokenData?.data?.access_token;
-      const refreshToken = tokenData?.refresh_token || tokenData?.data?.refresh_token || '';
-      const openId = tokenData?.open_id || tokenData?.data?.open_id || '';
+      accessToken = tokenData?.access_token || tokenData?.data?.access_token || '';
+      refreshToken = tokenData?.refresh_token || tokenData?.data?.refresh_token || '';
+      openId = tokenData?.open_id || tokenData?.data?.open_id || '';
 
       if (accessToken) {
         try {
@@ -96,8 +99,6 @@ export async function GET(req: NextRequest) {
     } catch (err: any) {
       exchangeError = err?.message || 'Token isteği sırasında sunucu hatası';
     }
-
-    const accessToken = tokenData?.access_token || tokenData?.data?.access_token;
 
     return new NextResponse(
       `<!DOCTYPE html>
@@ -136,6 +137,26 @@ export async function GET(req: NextRequest) {
               <a href="/" class="btn">Panele Git & Video Paylaş →</a>
               <button onclick="navigator.clipboard.writeText(document.getElementById('tokenBox').innerText); alert('Token kopyalandı!');" class="btn btn-secondary">Kopyala</button>
             </div>
+            <script>
+              try {
+                var acc = {
+                  id: "acc_tiktok_z1futbolresmi",
+                  platform: "TIKTOK",
+                  name: "@z1futbolresmi (TikTok)",
+                  credentials: {
+                    tiktokAccessToken: "${accessToken}",
+                    refreshToken: "${refreshToken}",
+                    openId: "${openId}"
+                  },
+                  is_active: true,
+                  created_at: new Date().toISOString()
+                };
+                var list = JSON.parse(localStorage.getItem('omnipost_accounts_backup') || '[]');
+                var next = list.filter(function(a) { return a.name !== acc.name; });
+                next.push(acc);
+                localStorage.setItem('omnipost_accounts_backup', JSON.stringify(next));
+              } catch(e) {}
+            </script>
           `
               : `
             <h2 style="color:#fbbf24;">Yetkilendirme Kodu Alındı</h2>
