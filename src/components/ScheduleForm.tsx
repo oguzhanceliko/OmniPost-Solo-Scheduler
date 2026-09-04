@@ -12,6 +12,8 @@ import {
   Check,
   Loader2,
   Users,
+  Plus,
+  Info,
 } from 'lucide-react';
 import { YouTubeIcon, InstagramIcon, TikTokIcon } from './icons';
 
@@ -19,6 +21,7 @@ interface ScheduleFormProps {
   uploadedUrl: string | null;
   uploadedKey: string | null;
   accounts?: Account[];
+  onOpenAccounts?: () => void;
   onPostCreated: () => void;
 }
 
@@ -26,6 +29,7 @@ export function ScheduleForm({
   uploadedUrl,
   uploadedKey,
   accounts = [],
+  onOpenAccounts,
   onPostCreated,
 }: ScheduleFormProps) {
   // Form State
@@ -170,6 +174,10 @@ export function ScheduleForm({
     }
   };
 
+  const ytAccounts = accounts.filter((a) => a.platform === 'YOUTUBE');
+  const igAccounts = accounts.filter((a) => a.platform === 'INSTAGRAM');
+  const ttAccounts = accounts.filter((a) => a.platform === 'TIKTOK');
+
   return (
     <div className="space-y-6">
       {/* Ortak Başlık & Açıklama */}
@@ -193,7 +201,7 @@ export function ScheduleForm({
       {/* Platform Seçimi */}
       <div className="space-y-3">
         <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
-          3. Hedef Platformlar & Hesaplar
+          3. Hedef Platformlar & Hesap Seçimi
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* YouTube Shorts */}
@@ -278,55 +286,180 @@ export function ScheduleForm({
           </button>
         </div>
 
-        {/* Çoklu Hesap Seçici (Eğer kayıtlı hesap varsa) */}
-        {accounts.length > 0 && (
-          <div className="p-3.5 rounded-xl bg-zinc-900/40 border border-zinc-800/80 space-y-2">
-            <div className="flex items-center justify-between text-xs text-zinc-400 font-medium">
-              <span className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-zinc-400" />
-                Hedef Hesaplar (Birden fazla seçilebilir):
-              </span>
-              <span className="text-[11px] text-zinc-500">
-                {selectedAccountIds.length} hesap seçili
-              </span>
-            </div>
-
-            <div className="flex flex-wrap gap-2 pt-1">
-              {accounts.map((acc) => {
-                const isSelected = selectedAccountIds.includes(acc.id);
-                const isPlatformActive = selectedPlatforms.includes(acc.platform);
-
-                return (
-                  <button
-                    key={acc.id}
-                    type="button"
-                    disabled={!isPlatformActive}
-                    onClick={() => toggleAccount(acc.id)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition ${
-                      !isPlatformActive
-                        ? 'opacity-30 border-zinc-900 bg-zinc-950 text-zinc-600'
-                        : isSelected
-                        ? 'bg-zinc-800 border-zinc-600 text-white shadow-sm'
-                        : 'bg-zinc-950 border-zinc-800/80 text-zinc-400 hover:border-zinc-700'
-                    }`}
-                  >
-                    <div
-                      className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[9px] border ${
-                        isSelected && isPlatformActive
-                          ? 'bg-zinc-200 text-black border-zinc-200 font-bold'
-                          : 'border-zinc-700'
-                      }`}
-                    >
-                      {isSelected && isPlatformActive && <Check className="w-2.5 h-2.5" />}
-                    </div>
-                    <span>{acc.name}</span>
-                    <span className="text-[10px] text-zinc-500">({acc.platform})</span>
-                  </button>
-                );
-              })}
-            </div>
+        {/* HESAP SEÇİM BÖLÜMÜ (Açık ve Net) */}
+        <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-zinc-400" />
+              Paylaşım Yapılacak Hesaplar:
+            </span>
+            {onOpenAccounts && (
+              <button
+                type="button"
+                onClick={onOpenAccounts}
+                className="flex items-center gap-1 text-[11px] font-medium text-emerald-400 hover:text-emerald-300 transition"
+              >
+                <Plus className="w-3 h-3" />
+                <span>Hesap Ekle / Düzenle</span>
+              </button>
+            )}
           </div>
-        )}
+
+          <div className="space-y-2">
+            {/* YouTube Seçili İse */}
+            {selectedPlatforms.includes('YOUTUBE') && (
+              <div className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/80 flex-wrap gap-2">
+                <span className="flex items-center gap-1.5 text-red-400 font-medium">
+                  <YouTubeIcon className="w-3.5 h-3.5" /> YouTube Kanalı:
+                </span>
+                {ytAccounts.length > 0 ? (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {ytAccounts.map((acc) => {
+                      const isSel = selectedAccountIds.includes(acc.id);
+                      return (
+                        <button
+                          key={acc.id}
+                          type="button"
+                          onClick={() => toggleAccount(acc.id)}
+                          className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition border ${
+                            isSel
+                              ? 'bg-zinc-800 border-zinc-600 text-white font-medium'
+                              : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+                          }`}
+                        >
+                          <div
+                            className={`w-3 h-3 rounded flex items-center justify-center text-[8px] border ${
+                              isSel ? 'bg-zinc-100 text-black border-zinc-100' : 'border-zinc-700'
+                            }`}
+                          >
+                            {isSel && <Check className="w-2 h-2" />}
+                          </div>
+                          <span>{acc.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-[11px] text-zinc-500">
+                    <Info className="w-3 h-3 text-zinc-600" />
+                    <span>Özel hesap eklenmedi (.env varsayılanı kullanılır)</span>
+                    {onOpenAccounts && (
+                      <button
+                        type="button"
+                        onClick={onOpenAccounts}
+                        className="text-zinc-400 hover:text-zinc-200 underline"
+                      >
+                        + Ekle
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Instagram Seçili İse */}
+            {selectedPlatforms.includes('INSTAGRAM') && (
+              <div className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/80 flex-wrap gap-2">
+                <span className="flex items-center gap-1.5 text-pink-400 font-medium">
+                  <InstagramIcon className="w-3.5 h-3.5" /> Instagram Hesabı:
+                </span>
+                {igAccounts.length > 0 ? (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {igAccounts.map((acc) => {
+                      const isSel = selectedAccountIds.includes(acc.id);
+                      return (
+                        <button
+                          key={acc.id}
+                          type="button"
+                          onClick={() => toggleAccount(acc.id)}
+                          className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition border ${
+                            isSel
+                              ? 'bg-zinc-800 border-zinc-600 text-white font-medium'
+                              : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+                          }`}
+                        >
+                          <div
+                            className={`w-3 h-3 rounded flex items-center justify-center text-[8px] border ${
+                              isSel ? 'bg-zinc-100 text-black border-zinc-100' : 'border-zinc-700'
+                            }`}
+                          >
+                            {isSel && <Check className="w-2 h-2" />}
+                          </div>
+                          <span>{acc.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-[11px] text-zinc-500">
+                    <Info className="w-3 h-3 text-zinc-600" />
+                    <span>Özel hesap eklenmedi (.env varsayılanı kullanılır)</span>
+                    {onOpenAccounts && (
+                      <button
+                        type="button"
+                        onClick={onOpenAccounts}
+                        className="text-zinc-400 hover:text-zinc-200 underline"
+                      >
+                        + Ekle
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TikTok Seçili İse */}
+            {selectedPlatforms.includes('TIKTOK') && (
+              <div className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/80 flex-wrap gap-2">
+                <span className="flex items-center gap-1.5 text-zinc-300 font-medium">
+                  <TikTokIcon className="w-3.5 h-3.5" /> TikTok Hesabı:
+                </span>
+                {ttAccounts.length > 0 ? (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {ttAccounts.map((acc) => {
+                      const isSel = selectedAccountIds.includes(acc.id);
+                      return (
+                        <button
+                          key={acc.id}
+                          type="button"
+                          onClick={() => toggleAccount(acc.id)}
+                          className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition border ${
+                            isSel
+                              ? 'bg-zinc-800 border-zinc-600 text-white font-medium'
+                              : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+                          }`}
+                        >
+                          <div
+                            className={`w-3 h-3 rounded flex items-center justify-center text-[8px] border ${
+                              isSel ? 'bg-zinc-100 text-black border-zinc-100' : 'border-zinc-700'
+                            }`}
+                          >
+                            {isSel && <Check className="w-2 h-2" />}
+                          </div>
+                          <span>{acc.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-[11px] text-zinc-500">
+                    <Info className="w-3 h-3 text-zinc-600" />
+                    <span>Özel hesap eklenmedi (.env varsayılanı kullanılır)</span>
+                    {onOpenAccounts && (
+                      <button
+                        type="button"
+                        onClick={onOpenAccounts}
+                        className="text-zinc-400 hover:text-zinc-200 underline"
+                      >
+                        + Ekle
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* İsteğe Bağlı: Platforma Özel Başlık / Açıklama Akordeon */}
@@ -482,7 +615,7 @@ export function ScheduleForm({
           type="button"
           disabled={isSubmitting || !uploadedUrl}
           onClick={() => handleSubmit(false)}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-zinc-100 hover:bg-white text-zinc-900 font-semibold text-xs transition shadow-sm disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs transition shadow-sm disabled:opacity-50"
         >
           {isSubmitting ? (
             <Loader2 className="w-4 h-4 animate-spin text-zinc-900" />

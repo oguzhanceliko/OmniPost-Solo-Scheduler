@@ -108,6 +108,7 @@ export default function DashboardClient() {
               uploadedUrl={uploadedUrl}
               uploadedKey={uploadedKey}
               accounts={accounts}
+              onOpenAccounts={() => setIsAccountsModalOpen(true)}
               onPostCreated={handlePostCreated}
             />
           </div>

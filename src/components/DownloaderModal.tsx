@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { YouTubeIcon, InstagramIcon, TikTokIcon } from './icons';
 import {
   X,
@@ -9,9 +9,8 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  Copy,
-  Check,
   ClipboardPaste,
+  ExternalLink,
 } from 'lucide-react';
 
 interface DownloaderModalProps {
@@ -23,20 +22,31 @@ export function DownloaderModal({ isOpen, onClose }: DownloaderModalProps) {
   const [url, setUrl] = useState('');
   const [isResolving, setIsResolving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const [resolvedVideo, setResolvedVideo] = useState<{
     downloadUrl: string;
+    directAlternative?: string;
     title: string;
     platform: string;
     thumbnail?: string;
+    author?: string;
+    isExternalDownload?: boolean;
   } | null>(null);
+
+  // Modal her açıldığında veya kapandığında eski hata ve durumları sıfırla
+  useEffect(() => {
+    if (isOpen) {
+      setError(null);
+      setResolvedVideo(null);
+      setUrl('');
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      if (text) setUrl(text);
+      if (text) setUrl(text.trim());
     } catch {
       // Panodan okuma izni verilmediyse sessizce geç
     }
@@ -57,9 +67,17 @@ export function DownloaderModal({ isOpen, onClose }: DownloaderModalProps) {
         body: JSON.stringify({ url: url.trim() }),
       });
 
-      const data = await res.json();
-      if (!res.ok || !data.downloadUrl) {
-        throw new Error(data.error || 'Video bağlantısı çözülemedi.');
+      // Unexpected end of JSON input hatasını önlemek için güvenli okuma
+      const text = await res.text();
+      let data: any = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        throw new Error('Sunucudan geçersiz bir yanıt alındı.');
+      }
+
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || 'Video bağlantısı çözülemedi.');
       }
 
       setResolvedVideo(data);
@@ -69,13 +87,6 @@ export function DownloaderModal({ isOpen, onClose }: DownloaderModalProps) {
     } finally {
       setIsResolving(false);
     }
-  };
-
-  const handleCopyLink = () => {
-    if (!resolvedVideo?.downloadUrl) return;
-    navigator.clipboard.writeText(resolvedVideo.downloadUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -104,7 +115,7 @@ export function DownloaderModal({ isOpen, onClose }: DownloaderModalProps) {
             <span>Desteklenen Platformlar:</span>
             <div className="flex items-center gap-2">
               <span className="flex items-center gap-1 text-red-400 bg-red-950/30 px-2 py-0.5 rounded border border-red-900/40">
-                <YouTubeIcon className="w-3 h-3" /> Shorts
+                <YouTubeIcon className="w-3 h-3" /> YouTube / Shorts
               </span>
               <span className="flex items-center gap-1 text-pink-400 bg-pink-950/30 px-2 py-0.5 rounded border border-pink-900/40">
                 <InstagramIcon className="w-3 h-3" /> Reels
@@ -126,7 +137,7 @@ export function DownloaderModal({ isOpen, onClose }: DownloaderModalProps) {
                 required
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="Video linkini buraya yapıştırın..."
+                placeholder="YouTube, Reels veya TikTok linkini yapıştırın..."
                 className="w-full pl-9 pr-24 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-600 transition"
               />
               <button
@@ -168,40 +179,70 @@ export function DownloaderModal({ isOpen, onClose }: DownloaderModalProps) {
 
           {/* Çözülen Video Kartı */}
           {resolvedVideo && (
-            <div className="p-4 rounded-xl border border-zinc-700/80 bg-zinc-900/70 space-y-3 animate-in fade-in duration-150">
-              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Video Başarıyla Çözüldü</span>
+            <div className="p-4 rounded-xl border border-zinc-700/80 bg-zinc-900/70 space-y-3.5 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Video Başarıyla Çözüldü</span>
+                </div>
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">
+                  {resolvedVideo.platform}
+                </span>
               </div>
 
-              <div className="text-xs text-zinc-300 font-medium line-clamp-2">
-                {resolvedVideo.title}
+              {/* Video Başlık ve Görsel */}
+              <div className="flex gap-3 items-start">
+                {resolvedVideo.thumbnail && (
+                  <img
+                    src={resolvedVideo.thumbnail}
+                    alt="Kapak"
+                    className="w-20 h-14 object-cover rounded-lg border border-zinc-800 shrink-0"
+                  />
+                )}
+                <div className="space-y-1 flex-1 min-w-0">
+                  <div className="text-xs text-zinc-200 font-medium line-clamp-2 leading-snug">
+                    {resolvedVideo.title}
+                  </div>
+                  {resolvedVideo.author && (
+                    <div className="text-[11px] text-zinc-400 truncate">
+                      Kanal: {resolvedVideo.author}
+                    </div>
+                  )}
+                </div>
               </div>
 
+              {/* İndirme Butonları */}
               <div className="flex flex-col sm:flex-row gap-2 pt-1">
                 <a
                   href={resolvedVideo.downloadUrl}
                   target="_blank"
                   rel="noreferrer"
                   download
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs transition"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs transition"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>Orijinal Videoyu İndir (.mp4)</span>
+                  <span>
+                    {resolvedVideo.platform === 'TIKTOK'
+                      ? 'Filigransız MP4 İndir'
+                      : 'Orijinal Kalitede İndir (.mp4)'}
+                  </span>
                 </a>
 
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs transition"
-                >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied ? 'Kopyalandı' : 'Direkt Link'}</span>
-                </button>
+                {resolvedVideo.directAlternative && (
+                  <a
+                    href={resolvedVideo.directAlternative}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-center gap-1 py-2 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs transition"
+                  >
+                    <span>Alternatif İndirici</span>
+                    <ExternalLink className="w-3 h-3 text-zinc-400" />
+                  </a>
+                )}
               </div>
 
               <p className="text-[11px] text-zinc-500 leading-normal">
-                İndirme işlemi doğrudan platformun CDN sunucusundan bilgisayarınıza yapılır. Vercel sunucunuz hiçbir yük veya bant genişliği harcamaz.
+                İndirme işlemi doğrudan platform CDN'i üzerinden cihazınıza aktarılır. Vercel sunucunuzda bant genişliği ve zaman aşımı oluşmaz.
               </p>
             </div>
           )}
