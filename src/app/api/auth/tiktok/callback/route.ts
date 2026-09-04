@@ -11,6 +11,11 @@ export async function GET(req: NextRequest) {
   const code = searchParams.get('code');
   const error = searchParams.get('error');
   const errorDescription = searchParams.get('error_description');
+  const state = searchParams.get('state');
+
+  const isSandbox = state === 'sandbox';
+  const effectiveKey = isSandbox ? 'sbawe4fhm9id9cbpwj' : (process.env.TIKTOK_CLIENT_KEY || 'awmjlpck32jcq70n');
+  const effectiveSecret = isSandbox ? 't2SureQiAqCJhcDErDNnt8k95SEcYATl' : (process.env.TIKTOK_CLIENT_SECRET || '7rvudXsffQ1yWgvd54KZyWnwN55EklqP');
 
   if (error) {
     return new NextResponse(
@@ -54,8 +59,8 @@ export async function GET(req: NextRequest) {
           'Cache-Control': 'no-cache',
         },
         body: new URLSearchParams({
-          client_key: CLIENT_KEY,
-          client_secret: CLIENT_SECRET,
+          client_key: effectiveKey,
+          client_secret: effectiveSecret,
           code: code,
           grant_type: 'authorization_code',
           redirect_uri: REDIRECT_URI,

@@ -338,7 +338,7 @@ export function AccountsModal({
                       Aşağıdaki butona basarak TikTok hesabınızdan video paylaşım iznini doğrudan verebilirsiniz:
                     </p>
                     <a
-                      href="https://www.tiktok.com/v2/auth/authorize/?client_key=awmjlpck32jcq70n&scope=user.info.basic%2Cvideo.upload%2Cvideo.publish&response_type=code&redirect_uri=https%3A%2F%2Fomnipost-eosin.vercel.app%2Fapi%2Fauth%2Ftiktok%2Fcallback&state=omnipost"
+                      href="https://www.tiktok.com/v2/auth/authorize/?client_key=sbawe4fhm9id9cbpwj&scope=user.info.basic%2Cvideo.upload%2Cvideo.publish&response_type=code&redirect_uri=https%3A%2F%2Fomnipost-eosin.vercel.app%2Fapi%2Fauth%2Ftiktok%2Fcallback&state=sandbox"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs transition shadow-sm"
