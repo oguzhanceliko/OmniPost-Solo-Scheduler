@@ -331,7 +331,28 @@ export function AccountsModal({
               )}
 
               {selectedPlatform === 'TIKTOK' && (
-                <div className="space-y-2.5 pt-1">
+                <div className="space-y-3 pt-1">
+                  <div className="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800 text-xs space-y-2">
+                    <div className="font-medium text-zinc-200">1. Yöntem: Tek Tıkla Bağlan (Önerilen)</div>
+                    <p className="text-[11px] text-zinc-400">
+                      Aşağıdaki butona basarak TikTok hesabınızdan video paylaşım iznini doğrudan verebilirsiniz:
+                    </p>
+                    <a
+                      href="https://www.tiktok.com/v2/auth/authorize/?client_key=awmjlpck32jcq70n&scope=user.info.basic,video.upload,video.publish&response_type=code&redirect_uri=https://omnipost-eosin.vercel.app/api/auth/tiktok/callback&state=omnipost"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs transition shadow-sm"
+                    >
+                      <TikTokIcon className="w-3.5 h-3.5" />
+                      <span>TikTok ile Hesabı Bağla →</span>
+                    </a>
+                  </div>
+
+                  <div className="relative flex items-center justify-center my-2">
+                    <div className="border-t border-zinc-800 w-full"></div>
+                    <span className="bg-zinc-900 px-2 text-[10px] text-zinc-500 uppercase tracking-wider absolute">veya manuel</span>
+                  </div>
+
                   <div className="space-y-1">
                     <label className="text-[11px] font-medium text-zinc-400">TikTok Access Token</label>
                     <input
