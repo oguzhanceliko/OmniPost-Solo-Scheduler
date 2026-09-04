@@ -26,7 +26,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        <meta name="tiktok-developers-site-verification" content="tiktok-developers-site-verification=6k7HpUSaQ3rTtZfCXLGI2vsnVbPgDkMs" />
+      </head>
+      <body className="min-h-full flex flex-col">
+        {/* TikTok Verification Signature */}
+        <div style={{ display: 'none' }} id="tiktok-developers-site-verification">
+          tiktok-developers-site-verification=6k7HpUSaQ3rTtZfCXLGI2vsnVbPgDkMs
+        </div>
+        {children}
+      </body>
     </html>
   );
 }
