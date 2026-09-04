@@ -286,33 +286,33 @@ export function ScheduleForm({
           </button>
         </div>
 
-        {/* HESAP SEÇİM BÖLÜMÜ (Açık ve Net) */}
-        <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-zinc-400" />
-              Paylaşım Yapılacak Hesaplar:
-            </span>
-            {onOpenAccounts && (
-              <button
-                type="button"
-                onClick={onOpenAccounts}
-                className="flex items-center gap-1 text-[11px] font-medium text-emerald-400 hover:text-emerald-300 transition"
-              >
-                <Plus className="w-3 h-3" />
-                <span>Hesap Ekle / Düzenle</span>
-              </button>
-            )}
-          </div>
+        {/* HESAP SEÇİM BÖLÜMÜ (Yalnızca kayıtlı hesap varsa gösterilir) */}
+        {accounts.length > 0 && (
+          <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-zinc-400" />
+                Paylaşım Yapılacak Hesaplar:
+              </span>
+              {onOpenAccounts && (
+                <button
+                  type="button"
+                  onClick={onOpenAccounts}
+                  className="flex items-center gap-1 text-[11px] font-medium text-emerald-400 hover:text-emerald-300 transition"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Hesap Ekle / Düzenle</span>
+                </button>
+              )}
+            </div>
 
-          <div className="space-y-2">
-            {/* YouTube Seçili İse */}
-            {selectedPlatforms.includes('YOUTUBE') && (
-              <div className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/80 flex-wrap gap-2">
-                <span className="flex items-center gap-1.5 text-red-400 font-medium">
-                  <YouTubeIcon className="w-3.5 h-3.5" /> YouTube Kanalı:
-                </span>
-                {ytAccounts.length > 0 ? (
+            <div className="space-y-2">
+              {/* YouTube Seçili İse ve YouTube hesabı varsa */}
+              {selectedPlatforms.includes('YOUTUBE') && ytAccounts.length > 0 && (
+                <div className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/80 flex-wrap gap-2">
+                  <span className="flex items-center gap-1.5 text-red-400 font-medium">
+                    <YouTubeIcon className="w-3.5 h-3.5" /> YouTube Kanalı:
+                  </span>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {ytAccounts.map((acc) => {
                       const isSel = selectedAccountIds.includes(acc.id);
@@ -339,31 +339,15 @@ export function ScheduleForm({
                       );
                     })}
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-[11px] text-zinc-500">
-                    <Info className="w-3 h-3 text-zinc-600" />
-                    <span>Özel hesap eklenmedi (.env varsayılanı kullanılır)</span>
-                    {onOpenAccounts && (
-                      <button
-                        type="button"
-                        onClick={onOpenAccounts}
-                        className="text-zinc-400 hover:text-zinc-200 underline"
-                      >
-                        + Ekle
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
 
-            {/* Instagram Seçili İse */}
-            {selectedPlatforms.includes('INSTAGRAM') && (
-              <div className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/80 flex-wrap gap-2">
-                <span className="flex items-center gap-1.5 text-pink-400 font-medium">
-                  <InstagramIcon className="w-3.5 h-3.5" /> Instagram Hesabı:
-                </span>
-                {igAccounts.length > 0 ? (
+              {/* Instagram Seçili İse ve Instagram hesabı varsa */}
+              {selectedPlatforms.includes('INSTAGRAM') && igAccounts.length > 0 && (
+                <div className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/80 flex-wrap gap-2">
+                  <span className="flex items-center gap-1.5 text-pink-400 font-medium">
+                    <InstagramIcon className="w-3.5 h-3.5" /> Instagram Hesabı:
+                  </span>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {igAccounts.map((acc) => {
                       const isSel = selectedAccountIds.includes(acc.id);
@@ -390,31 +374,15 @@ export function ScheduleForm({
                       );
                     })}
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-[11px] text-zinc-500">
-                    <Info className="w-3 h-3 text-zinc-600" />
-                    <span>Özel hesap eklenmedi (.env varsayılanı kullanılır)</span>
-                    {onOpenAccounts && (
-                      <button
-                        type="button"
-                        onClick={onOpenAccounts}
-                        className="text-zinc-400 hover:text-zinc-200 underline"
-                      >
-                        + Ekle
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
 
-            {/* TikTok Seçili İse */}
-            {selectedPlatforms.includes('TIKTOK') && (
-              <div className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/80 flex-wrap gap-2">
-                <span className="flex items-center gap-1.5 text-zinc-300 font-medium">
-                  <TikTokIcon className="w-3.5 h-3.5" /> TikTok Hesabı:
-                </span>
-                {ttAccounts.length > 0 ? (
+              {/* TikTok Seçili İse ve TikTok hesabı varsa */}
+              {selectedPlatforms.includes('TIKTOK') && ttAccounts.length > 0 && (
+                <div className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-zinc-950/60 border border-zinc-800/80 flex-wrap gap-2">
+                  <span className="flex items-center gap-1.5 text-zinc-300 font-medium">
+                    <TikTokIcon className="w-3.5 h-3.5" /> TikTok Hesabı:
+                  </span>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {ttAccounts.map((acc) => {
                       const isSel = selectedAccountIds.includes(acc.id);
@@ -441,25 +409,11 @@ export function ScheduleForm({
                       );
                     })}
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-[11px] text-zinc-500">
-                    <Info className="w-3 h-3 text-zinc-600" />
-                    <span>Özel hesap eklenmedi (.env varsayılanı kullanılır)</span>
-                    {onOpenAccounts && (
-                      <button
-                        type="button"
-                        onClick={onOpenAccounts}
-                        className="text-zinc-400 hover:text-zinc-200 underline"
-                      >
-                        + Ekle
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* İsteğe Bağlı: Platforma Özel Başlık / Açıklama Akordeon */}
