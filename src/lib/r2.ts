@@ -58,9 +58,22 @@ export async function createUploadUrl(
   };
 }
 
+import { UTApi } from 'uploadthing/server';
+
 export async function deleteR2Object(key: string): Promise<boolean> {
+  if (process.env.UPLOADTHING_TOKEN) {
+    try {
+      const utapi = new UTApi({ token: process.env.UPLOADTHING_TOKEN });
+      await utapi.deleteFiles(key);
+      console.log(`[UploadThing Cleanup] Successfully deleted video object: ${key}`);
+      return true;
+    } catch (err) {
+      console.warn(`[UploadThing Cleanup Warning] Could not delete ${key}:`, err);
+    }
+  }
+
   if (!isR2Configured || !s3Client) {
-    console.log(`[R2 Cleanup Mock] Mock video deleted: ${key}`);
+    console.log(`[Storage Cleanup Mock] Mock video deleted: ${key}`);
     return true;
   }
 

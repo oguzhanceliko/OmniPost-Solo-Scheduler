@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { UploadCloud, Film, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useUploadThing } from '@/lib/uploadthing-client';
 
 interface VideoUploaderProps {
   uploadedUrl: string | null;
@@ -30,6 +31,25 @@ export function VideoUploader({
     duration?: number;
     isVertical?: boolean;
   } | null>(null);
+
+  const { startUpload: utUpload } = useUploadThing('videoUploader', {
+    onUploadProgress: (p) => {
+      setUploadProgress(p);
+    },
+    onClientUploadComplete: (res) => {
+      if (res && res[0]) {
+        const fileData = res[0];
+        const publicUrl = fileData.ufsUrl || fileData.url;
+        const key = fileData.key;
+        setIsUploading(false);
+        setUploadProgress(100);
+        onUploadSuccess(publicUrl, key);
+      }
+    },
+    onUploadError: (err) => {
+      console.warn('UploadThing upload error:', err);
+    },
+  });
 
   const processFile = async (file: File) => {
     if (!file.type.startsWith('video/')) {
@@ -75,9 +95,26 @@ export function VideoUploader({
   const startUpload = async (file: File) => {
     setIsUploading(true);
     setUploadProgress(0);
+    setErrorMessage(null);
 
+    // 1. Doğrudan UploadThing CDN Yüklemesi
     try {
-      // 1. Presigned upload URL al
+      const utRes = await utUpload([file]);
+      if (utRes && utRes[0]) {
+        const fileData = utRes[0];
+        const publicUrl = fileData.ufsUrl || fileData.url;
+        const key = fileData.key;
+        setIsUploading(false);
+        setUploadProgress(100);
+        onUploadSuccess(publicUrl, key);
+        return;
+      }
+    } catch (utErr) {
+      console.warn('UploadThing hatası, alternatif yükleme deneniyor:', utErr);
+    }
+
+    // 2. Alternatif: Presigned / Sunucu Yüklemesi
+    try {
       const res = await fetch('/api/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -93,7 +130,6 @@ export function VideoUploader({
 
       const { uploadUrl, publicUrl, key } = await res.json();
 
-      // 2. Doğrudan yükleme yap (XHR ile ilerleme takibi)
       const xhr = new XMLHttpRequest();
       xhr.open('PUT', uploadUrl);
       xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
