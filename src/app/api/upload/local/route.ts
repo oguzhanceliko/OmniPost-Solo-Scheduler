@@ -10,7 +10,10 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Key parametresi eksik' }, { status: 400 });
     }
 
-    const uploadsDir = path.join(process.cwd(), 'local_uploads');
+    const uploadsDir = process.env.VERCEL
+      ? path.join('/tmp', 'local_uploads')
+      : path.join(process.cwd(), 'local_uploads');
+
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }

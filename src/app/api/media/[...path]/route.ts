@@ -10,7 +10,11 @@ export async function GET(
   const filePathArray = resolvedParams.path || [];
   const filename = path.basename(filePathArray.join('/'));
 
-  const localFile = path.join(process.cwd(), 'local_uploads', filename);
+  const uploadsDir = process.env.VERCEL
+    ? path.join('/tmp', 'local_uploads')
+    : path.join(process.cwd(), 'local_uploads');
+
+  const localFile = path.join(uploadsDir, filename);
 
   if (!fs.existsSync(localFile)) {
     return new NextResponse('Dosya bulunamadı', { status: 404 });
