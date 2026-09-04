@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "OmniPost Solo Scheduler",
   description: "Shorts, Reels & TikTok Automation",
   other: {
-    "tiktok-developers-site-verification": "1hdqeLm3HBneYFfdWz4A1fyCVV8ZU9zz",
+    "tiktok-developers-site-verification": "6k7HpUSaQ3rTtZfCXLGI2vsnVbPgDkMs",
   },
 };
 
