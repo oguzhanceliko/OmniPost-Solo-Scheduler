@@ -8,6 +8,27 @@ export interface CustomCaptions {
   tiktok?: string;
 }
 
+export interface AccountCredentials {
+  // YouTube
+  clientId?: string;
+  clientSecret?: string;
+  refreshToken?: string;
+  // Instagram
+  instagramAccountId?: string;
+  instagramAccessToken?: string;
+  // TikTok
+  tiktokAccessToken?: string;
+}
+
+export interface Account {
+  id: string;
+  platform: Platform;
+  name: string; // Örn: "Ana YouTube Kanalı", "Mizah Hesabı", "@oguzhancelik"
+  credentials: AccountCredentials;
+  is_active: boolean;
+  created_at: string;
+}
+
 export interface ScheduledPost {
   id: string;
   video_url: string;
@@ -16,6 +37,8 @@ export interface ScheduledPost {
   custom_captions?: CustomCaptions;
   schedule_time: string; // ISO 8601 string
   platforms: Platform[];
+  target_account_ids?: string[]; // Çoklu hesap desteği: Bu gönderi hangi hesaplara gidecek
+  target_account_names?: string[]; // Kartlarda anında göstermek için hesap isimleri
   status: PostStatus;
   log?: string | null;
   created_at: string;

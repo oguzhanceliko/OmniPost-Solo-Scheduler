@@ -1,12 +1,13 @@
 export interface TikTokUploadParams {
   videoUrl: string;
   caption: string;
+  accessToken?: string;
 }
 
 export async function publishToTikTok(
   params: TikTokUploadParams
 ): Promise<{ success: boolean; publishId?: string; error?: string }> {
-  const accessToken = process.env.TIKTOK_ACCESS_TOKEN;
+  const accessToken = params.accessToken || process.env.TIKTOK_ACCESS_TOKEN;
 
   if (!accessToken) {
     console.log(`[TikTok Mock] Publishing to TikTok: "${params.caption}" from ${params.videoUrl}`);

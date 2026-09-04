@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Platform } from '@/types';
+import React, { useState, useEffect } from 'react';
+import { Platform, Account } from '@/types';
 import {
   Calendar,
   Send,
@@ -11,18 +11,21 @@ import {
   Sparkles,
   Check,
   Loader2,
+  Users,
 } from 'lucide-react';
 import { YouTubeIcon, InstagramIcon, TikTokIcon } from './icons';
 
 interface ScheduleFormProps {
   uploadedUrl: string | null;
   uploadedKey: string | null;
+  accounts?: Account[];
   onPostCreated: () => void;
 }
 
 export function ScheduleForm({
   uploadedUrl,
   uploadedKey,
+  accounts = [],
   onPostCreated,
 }: ScheduleFormProps) {
   // Form State
@@ -32,6 +35,7 @@ export function ScheduleForm({
     'INSTAGRAM',
     'TIKTOK',
   ]);
+  const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
   const [scheduleTime, setScheduleTime] = useState('');
   const [showCustomCaptions, setShowCustomCaptions] = useState(false);
   const [ytCustom, setYtCustom] = useState('');
@@ -40,6 +44,13 @@ export function ScheduleForm({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Otomatik olarak tüm aktif hesapları varsayılan seçili yap
+  useEffect(() => {
+    if (accounts.length > 0) {
+      setSelectedAccountIds(accounts.filter((a) => a.is_active).map((a) => a.id));
+    }
+  }, [accounts]);
 
   // Platform toggle helper
   const togglePlatform = (p: Platform) => {
@@ -51,11 +62,19 @@ export function ScheduleForm({
     }
   };
 
+  // Hesap seçimi toggle
+  const toggleAccount = (id: string) => {
+    if (selectedAccountIds.includes(id)) {
+      setSelectedAccountIds(selectedAccountIds.filter((accId) => accId !== id));
+    } else {
+      setSelectedAccountIds([...selectedAccountIds, id]);
+    }
+  };
+
   // Hızlı saat atama butonları
   const applyQuickTime = (hoursToAdd: number) => {
     const d = new Date();
     d.setHours(d.getHours() + hoursToAdd);
-    // YYYY-MM-DDTHH:mm formatına çevir
     const pad = (n: number) => String(n).padStart(2, '0');
     const formatted = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
       d.getHours()
@@ -93,13 +112,17 @@ export function ScheduleForm({
 
     try {
       const targetScheduleTime = publishImmediately
-        ? new Date(Date.now() - 1000).toISOString() // Geçmiş tarih hemen tetikler
+        ? new Date(Date.now() - 1000).toISOString()
         : new Date(scheduleTime).toISOString();
 
       const custom_captions: Record<string, string> = {};
       if (ytCustom.trim()) custom_captions.youtube = ytCustom.trim();
       if (igCustom.trim()) custom_captions.instagram = igCustom.trim();
       if (ttCustom.trim()) custom_captions.tiktok = ttCustom.trim();
+
+      // Seçilen hesap isimlerini hazırla
+      const targetAccounts = accounts.filter((a) => selectedAccountIds.includes(a.id));
+      const targetAccountNames = targetAccounts.map((a) => `${a.platform}: ${a.name}`);
 
       // 1. Gönderiyi oluştur
       const res = await fetch('/api/posts', {
@@ -112,6 +135,8 @@ export function ScheduleForm({
           custom_captions: Object.keys(custom_captions).length > 0 ? custom_captions : undefined,
           schedule_time: targetScheduleTime,
           platforms: selectedPlatforms,
+          target_account_ids: targetAccounts.length > 0 ? targetAccounts.map((a) => a.id) : undefined,
+          target_account_names: targetAccountNames.length > 0 ? targetAccountNames : undefined,
         }),
       });
 
@@ -166,9 +191,9 @@ export function ScheduleForm({
       </div>
 
       {/* Platform Seçimi */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
-          3. Hedef Platformlar
+          3. Hedef Platformlar & Hesaplar
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* YouTube Shorts */}
@@ -252,6 +277,56 @@ export function ScheduleForm({
             </div>
           </button>
         </div>
+
+        {/* Çoklu Hesap Seçici (Eğer kayıtlı hesap varsa) */}
+        {accounts.length > 0 && (
+          <div className="p-3.5 rounded-xl bg-zinc-900/40 border border-zinc-800/80 space-y-2">
+            <div className="flex items-center justify-between text-xs text-zinc-400 font-medium">
+              <span className="flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-zinc-400" />
+                Hedef Hesaplar (Birden fazla seçilebilir):
+              </span>
+              <span className="text-[11px] text-zinc-500">
+                {selectedAccountIds.length} hesap seçili
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              {accounts.map((acc) => {
+                const isSelected = selectedAccountIds.includes(acc.id);
+                const isPlatformActive = selectedPlatforms.includes(acc.platform);
+
+                return (
+                  <button
+                    key={acc.id}
+                    type="button"
+                    disabled={!isPlatformActive}
+                    onClick={() => toggleAccount(acc.id)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition ${
+                      !isPlatformActive
+                        ? 'opacity-30 border-zinc-900 bg-zinc-950 text-zinc-600'
+                        : isSelected
+                        ? 'bg-zinc-800 border-zinc-600 text-white shadow-sm'
+                        : 'bg-zinc-950 border-zinc-800/80 text-zinc-400 hover:border-zinc-700'
+                    }`}
+                  >
+                    <div
+                      className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[9px] border ${
+                        isSelected && isPlatformActive
+                          ? 'bg-zinc-200 text-black border-zinc-200 font-bold'
+                          : 'border-zinc-700'
+                      }`}
+                    >
+                      {isSelected && isPlatformActive && <Check className="w-2.5 h-2.5" />}
+                    </div>
+                    <span>{acc.name}</span>
+                    <span className="text-[10px] text-zinc-500">({acc.platform})</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* İsteğe Bağlı: Platforma Özel Başlık / Açıklama Akordeon */}

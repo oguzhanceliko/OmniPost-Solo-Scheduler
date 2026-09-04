@@ -1,13 +1,15 @@
 export interface InstagramUploadParams {
   videoUrl: string;
   caption: string;
+  accountId?: string;
+  accessToken?: string;
 }
 
 export async function publishToInstagram(
   params: InstagramUploadParams
 ): Promise<{ success: boolean; mediaId?: string; error?: string }> {
-  const accountId = process.env.INSTAGRAM_ACCOUNT_ID;
-  const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
+  const accountId = params.accountId || process.env.INSTAGRAM_ACCOUNT_ID;
+  const accessToken = params.accessToken || process.env.INSTAGRAM_ACCESS_TOKEN;
 
   if (!accountId || !accessToken) {
     console.log(`[Instagram Mock] Publishing to Reels: "${params.caption}" from ${params.videoUrl}`);

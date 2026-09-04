@@ -5,7 +5,9 @@ import { Header } from '@/components/Header';
 import { VideoUploader } from '@/components/VideoUploader';
 import { ScheduleForm } from '@/components/ScheduleForm';
 import { PostList } from '@/components/PostList';
-import { ScheduledPost } from '@/types';
+import { AccountsModal } from '@/components/AccountsModal';
+import { DownloaderModal } from '@/components/DownloaderModal';
+import { ScheduledPost, Account } from '@/types';
 import { PlusCircle, ListFilter } from 'lucide-react';
 
 export default function DashboardClient() {
@@ -15,6 +17,10 @@ export default function DashboardClient() {
 
   const [posts, setPosts] = useState<ScheduledPost[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState<boolean>(true);
+
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [isAccountsModalOpen, setIsAccountsModalOpen] = useState<boolean>(false);
+  const [isDownloaderModalOpen, setIsDownloaderModalOpen] = useState<boolean>(false);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -30,12 +36,25 @@ export default function DashboardClient() {
     }
   }, []);
 
+  const fetchAccounts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/accounts');
+      if (res.ok) {
+        const data = await res.json();
+        setAccounts(data.accounts || []);
+      }
+    } catch (err) {
+      console.error('Hesaplar yüklenemedi:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPosts();
+    fetchAccounts();
     // Her 20 saniyede bir durumu güncelle (yayınlanan gönderileri canlı görmek için)
     const interval = setInterval(fetchPosts, 20000);
     return () => clearInterval(interval);
-  }, [fetchPosts]);
+  }, [fetchPosts, fetchAccounts]);
 
   const handleUploadSuccess = (url: string, key: string) => {
     setUploadedUrl(url);
@@ -54,7 +73,11 @@ export default function DashboardClient() {
 
   return (
     <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col selection:bg-zinc-800">
-      <Header />
+      <Header
+        onOpenAccounts={() => setIsAccountsModalOpen(true)}
+        onOpenDownloader={() => setIsDownloaderModalOpen(true)}
+        accountsCount={accounts.length}
+      />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
         {/* Üst Alan: Yeni Gönderi Planlama Kartı */}
@@ -84,6 +107,7 @@ export default function DashboardClient() {
             <ScheduleForm
               uploadedUrl={uploadedUrl}
               uploadedKey={uploadedKey}
+              accounts={accounts}
               onPostCreated={handlePostCreated}
             />
           </div>
@@ -110,8 +134,21 @@ export default function DashboardClient() {
         </section>
       </main>
 
+      {/* Hesaplar ve Video İndirme Modalları */}
+      <AccountsModal
+        isOpen={isAccountsModalOpen}
+        onClose={() => setIsAccountsModalOpen(false)}
+        accounts={accounts}
+        onRefresh={fetchAccounts}
+      />
+
+      <DownloaderModal
+        isOpen={isDownloaderModalOpen}
+        onClose={() => setIsDownloaderModalOpen(false)}
+      />
+
       <footer className="border-t border-zinc-900 py-6 text-center text-xs text-zinc-600">
-        <p>OmniPost Solo Scheduler • Sıfır Maliyetli Dikey Video Otomasyonu</p>
+        <p>OmniPost Solo Scheduler • Sıfır Maliyetli Çoklu Hesap & Dikey Video Otomasyonu</p>
       </footer>
     </div>
   );

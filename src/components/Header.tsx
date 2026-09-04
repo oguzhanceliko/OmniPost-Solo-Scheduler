@@ -1,10 +1,20 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { LogOut, Radio, Clock, Video } from 'lucide-react';
+import { LogOut, Radio, Clock, Video, Download, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-export function Header() {
+interface HeaderProps {
+  onOpenDownloader?: () => void;
+  onOpenAccounts?: () => void;
+  accountsCount?: number;
+}
+
+export function Header({
+  onOpenDownloader,
+  onOpenAccounts,
+  accountsCount = 0,
+}: HeaderProps) {
   const router = useRouter();
   const [timeStr, setTimeStr] = useState<string>('');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -52,13 +62,38 @@ export function Header() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-xs text-zinc-400">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          {/* Video İndir Butonu */}
+          <button
+            type="button"
+            onClick={onOpenDownloader}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-medium text-zinc-200 hover:text-white transition"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden sm:inline">Video İndir</span>
+          </button>
+
+          {/* Hesaplar / Ayarlar Butonu */}
+          <button
+            type="button"
+            onClick={onOpenAccounts}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-medium text-zinc-200 hover:text-white transition"
+          >
+            <Users className="w-3.5 h-3.5 text-zinc-400" />
+            <span className="hidden sm:inline">Hesaplar</span>
+            {accountsCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-zinc-800 text-zinc-300 font-mono">
+                {accountsCount}
+              </span>
+            )}
+          </button>
+
+          <div className="hidden lg:flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-xs text-zinc-400">
             <Radio className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
-            <span>0 Maliyet Motoru Aktif</span>
+            <span>0 Maliyet</span>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-300">
+          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-300">
             <Clock className="w-3.5 h-3.5 text-zinc-400" />
             <span>{timeStr || '--:--:--'}</span>
           </div>
@@ -67,7 +102,7 @@ export function Header() {
             onClick={handleLogout}
             disabled={isLoggingOut}
             title="Oturumu Kapat"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs text-zinc-400 hover:text-zinc-200 transition"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs text-zinc-400 hover:text-zinc-200 transition"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Çıkış</span>

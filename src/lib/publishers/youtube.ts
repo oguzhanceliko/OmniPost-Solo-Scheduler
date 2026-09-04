@@ -5,12 +5,15 @@ export interface YouTubeUploadParams {
   videoUrl: string;
   title: string;
   description: string;
+  clientId?: string;
+  clientSecret?: string;
+  refreshToken?: string;
 }
 
 export async function publishToYouTube(params: YouTubeUploadParams): Promise<{ success: boolean; videoId?: string; error?: string }> {
-  const clientId = process.env.YOUTUBE_CLIENT_ID;
-  const clientSecret = process.env.YOUTUBE_CLIENT_SECRET;
-  const refreshToken = process.env.YOUTUBE_REFRESH_TOKEN;
+  const clientId = params.clientId || process.env.YOUTUBE_CLIENT_ID;
+  const clientSecret = params.clientSecret || process.env.YOUTUBE_CLIENT_SECRET;
+  const refreshToken = params.refreshToken || process.env.YOUTUBE_REFRESH_TOKEN;
 
   if (!clientId || !clientSecret || !refreshToken) {
     // If not configured, provide mock response for dev/test

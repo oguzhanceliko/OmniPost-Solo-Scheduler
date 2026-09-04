@@ -222,6 +222,23 @@ export function PostList({ posts, isLoading, onRefresh }: PostListProps) {
                           </span>
                         )}
                       </div>
+
+                      {/* Hedef Hesaplar */}
+                      {post.target_account_names && post.target_account_names.length > 0 && (
+                        <>
+                          <span>•</span>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {post.target_account_names.map((name, idx) => (
+                              <span
+                                key={idx}
+                                className="px-1.5 py-0.5 rounded bg-zinc-800/80 text-zinc-300 border border-zinc-700/60 text-[10px]"
+                              >
+                                {name}
+                              </span>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

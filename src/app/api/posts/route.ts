@@ -28,7 +28,16 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { video_url, video_key, caption, custom_captions, schedule_time, platforms } = body;
+    const {
+      video_url,
+      video_key,
+      caption,
+      custom_captions,
+      schedule_time,
+      platforms,
+      target_account_ids,
+      target_account_names,
+    } = body;
 
     if (!video_url || !caption || !schedule_time || !platforms || platforms.length === 0) {
       return NextResponse.json(
@@ -45,6 +54,8 @@ export async function POST(req: NextRequest) {
       custom_captions: custom_captions || undefined,
       schedule_time: new Date(schedule_time).toISOString(),
       platforms,
+      target_account_ids: target_account_ids || undefined,
+      target_account_names: target_account_names || undefined,
       status: 'PENDING',
       log: null,
       created_at: new Date().toISOString(),
