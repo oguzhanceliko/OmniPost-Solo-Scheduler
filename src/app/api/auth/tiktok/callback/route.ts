@@ -69,24 +69,27 @@ export async function GET(req: NextRequest) {
 
       tokenData = await tokenRes.json();
 
-      if (tokenData?.data?.access_token) {
-        // Otomatik hesabı DB'ye kaydet
-        const accessToken = tokenData.data.access_token;
-        const refreshToken = tokenData.data.refresh_token || '';
-        const openId = tokenData.data.open_id || '';
+      const accessToken = tokenData?.access_token || tokenData?.data?.access_token;
+      const refreshToken = tokenData?.refresh_token || tokenData?.data?.refresh_token || '';
+      const openId = tokenData?.open_id || tokenData?.data?.open_id || '';
 
-        await createAccount({
-          id: crypto.randomUUID(),
-          platform: 'TIKTOK',
-          name: `TikTok Hesabım (${openId ? openId.slice(0, 6) : 'Yeni'})`,
-          credentials: {
-            tiktokAccessToken: accessToken,
-            refreshToken: refreshToken,
-            openId: openId,
-          },
-          is_active: true,
-          created_at: new Date().toISOString(),
-        });
+      if (accessToken) {
+        try {
+          await createAccount({
+            id: crypto.randomUUID(),
+            platform: 'TIKTOK',
+            name: `@z1futbolresmi (TikTok)`,
+            credentials: {
+              tiktokAccessToken: accessToken,
+              refreshToken: refreshToken,
+              openId: openId,
+            },
+            is_active: true,
+            created_at: new Date().toISOString(),
+          });
+        } catch (dbErr) {
+          console.error('[DB save error]', dbErr);
+        }
       } else if (tokenData?.error?.message || tokenData?.message) {
         exchangeError = tokenData.error?.message || tokenData.message;
       }
@@ -94,7 +97,7 @@ export async function GET(req: NextRequest) {
       exchangeError = err?.message || 'Token isteği sırasında sunucu hatası';
     }
 
-    const accessToken = tokenData?.data?.access_token;
+    const accessToken = tokenData?.access_token || tokenData?.data?.access_token;
 
     return new NextResponse(
       `<!DOCTYPE html>

@@ -1,7 +1,17 @@
 import { createClient } from '@libsql/client';
 import { ScheduledPost, PostStatus, Platform, CustomCaptions, Account, AccountCredentials } from '@/types';
 
-const dbUrl = process.env.TURSO_DATABASE_URL || 'file:local.db';
+function getDbUrl(): string {
+  if (process.env.TURSO_DATABASE_URL) {
+    return process.env.TURSO_DATABASE_URL;
+  }
+  if (process.env.VERCEL) {
+    return 'file:/tmp/local.db';
+  }
+  return 'file:local.db';
+}
+
+const dbUrl = getDbUrl();
 const dbAuthToken = process.env.TURSO_AUTH_TOKEN;
 
 export const db = createClient({
