@@ -22,74 +22,15 @@ export default function DashboardClient() {
   const [isAccountsModalOpen, setIsAccountsModalOpen] = useState<boolean>(false);
   const [isDownloaderModalOpen, setIsDownloaderModalOpen] = useState<boolean>(false);
 
-  // Başlangıçta yerel depodaki hesap ve gönderileri yükle
-  useEffect(() => {
-    try {
-      const savedAccounts = localStorage.getItem('omnipost_accounts_backup');
-      if (savedAccounts) {
-        const parsed = JSON.parse(savedAccounts);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setAccounts(parsed);
-        }
-      } else {
-        // Önceden bağlanmış varsayılan TikTok hesabını yerel depoya kaydet
-        const initialAcc: Account = {
-          id: 'tiktok_z1futbolresmi',
-          platform: 'TIKTOK',
-          name: '@z1futbolresmi (TikTok)',
-          credentials: {
-            tiktokAccessToken: 'act.326FRsee22tBeivlopcsUC0PhWCp2XLvgkKFfXeKf9VGd0hWjlBRi1owjJZN!6355.s1',
-            refreshToken: 'rft.YSg7ILt4Xrz9XNYpYFB7e5apMUHtNtgpDoASB8tfOquHwqZ7NDgV072RVb2m!6283.s1',
-            openId: '-0007lohXrDUHIOFkq1yYauOBNqh409TNJyp',
-          },
-          is_active: true,
-          created_at: new Date().toISOString(),
-        };
-        setAccounts([initialAcc]);
-        localStorage.setItem('omnipost_accounts_backup', JSON.stringify([initialAcc]));
-      }
-
-      const savedPosts = localStorage.getItem('omnipost_posts_backup');
-      if (savedPosts) {
-        const parsedPosts = JSON.parse(savedPosts);
-        if (Array.isArray(parsedPosts) && parsedPosts.length > 0) {
-          setPosts(parsedPosts);
-          setIsLoadingPosts(false);
-        }
-      }
-    } catch {}
-  }, []);
-
   const fetchPosts = useCallback(async () => {
     try {
       const res = await fetch('/api/posts');
       if (res.ok) {
         const data = await res.json();
-        const serverPosts = data.posts || [];
-        if (serverPosts.length > 0) {
-          setPosts(serverPosts);
-          try {
-            localStorage.setItem('omnipost_posts_backup', JSON.stringify(serverPosts));
-          } catch {}
-        } else {
-          // Eğer sunucu Vercel container yeniden başladığı için boş döndüyse, localStorage'dan geri yükle
-          try {
-            const backup = localStorage.getItem('omnipost_posts_backup');
-            if (backup) {
-              const localPosts = JSON.parse(backup);
-              if (Array.isArray(localPosts) && localPosts.length > 0) {
-                setPosts(localPosts);
-              }
-            }
-          } catch {}
-        }
+        setPosts(data.posts || []);
       }
     } catch (err) {
       console.error('Gönderiler yüklenemedi:', err);
-      try {
-        const backup = localStorage.getItem('omnipost_posts_backup');
-        if (backup) setPosts(JSON.parse(backup));
-      } catch {}
     } finally {
       setIsLoadingPosts(false);
     }
@@ -100,45 +41,16 @@ export default function DashboardClient() {
       const res = await fetch('/api/accounts');
       if (res.ok) {
         const data = await res.json();
-        const serverAccounts = data.accounts || [];
-        if (serverAccounts.length > 0) {
-          setAccounts(serverAccounts);
-          try {
-            localStorage.setItem('omnipost_accounts_backup', JSON.stringify(serverAccounts));
-          } catch {}
-        } else {
-          // Eğer sunucu boş döndüyse, localStorage yedeklerini yükle ve sunucuya sessizce kaydet
-          try {
-            const backup = localStorage.getItem('omnipost_accounts_backup');
-            if (backup) {
-              const localAccounts: Account[] = JSON.parse(backup);
-              if (Array.isArray(localAccounts) && localAccounts.length > 0) {
-                setAccounts(localAccounts);
-                for (const acc of localAccounts) {
-                  fetch('/api/accounts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(acc),
-                  }).catch(() => {});
-                }
-              }
-            }
-          } catch {}
-        }
+        setAccounts(data.accounts || []);
       }
     } catch (err) {
       console.error('Hesaplar yüklenemedi:', err);
-      try {
-        const backup = localStorage.getItem('omnipost_accounts_backup');
-        if (backup) setAccounts(JSON.parse(backup));
-      } catch {}
     }
   }, []);
 
   useEffect(() => {
     fetchPosts();
     fetchAccounts();
-    // Her 20 saniyede bir durumu güncelle (yayınlanan gönderileri canlı görmek için)
     const interval = setInterval(fetchPosts, 20000);
     return () => clearInterval(interval);
   }, [fetchPosts, fetchAccounts]);

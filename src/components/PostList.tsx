@@ -41,11 +41,6 @@ export function PostList({ posts, isLoading, onRefresh }: PostListProps) {
         method: 'DELETE',
       });
       if (res.ok) {
-        try {
-          const existing = JSON.parse(localStorage.getItem('omnipost_posts_backup') || '[]');
-          const updated = existing.filter((p: any) => p.id !== id);
-          localStorage.setItem('omnipost_posts_backup', JSON.stringify(updated));
-        } catch {}
         onRefresh();
       }
     } finally {
