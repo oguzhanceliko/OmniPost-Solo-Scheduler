@@ -4,25 +4,34 @@ import { ScheduledPost, PostStatus, Platform, CustomCaptions, Account, AccountCr
 // MongoDB bağlantı yapılandırması
 const MONGODB_URI = process.env.MONGODB_URI || '';
 
-if (!MONGODB_URI) {
-  console.warn('[MongoDB] MONGODB_URI ortam değişkeni tanımlı değil. Veritabanı işlemleri başarısız olacaktır.');
+declare global {
+  var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
-// Bağlantı havuzu (connection pool) - Serverless ortamlar için önemli
-let client: MongoClient | null = null;
-let db: Db | null = null;
-
-async function getDb(): Promise<Db> {
-  if (db) return db;
-
-  if (!MONGODB_URI) {
+function getClientPromise(): Promise<MongoClient> {
+  const uri = process.env.MONGODB_URI || MONGODB_URI;
+  if (!uri) {
     throw new Error('MONGODB_URI ortam değişkeni tanımlı değil. Lütfen MongoDB Atlas bağlantı bilgisini ekleyin.');
   }
 
-  client = new MongoClient(MONGODB_URI);
-  await client.connect();
-  db = client.db(); // URI'deki veritabanı adını kullanır
-  return db;
+  if (process.env.NODE_ENV === 'development') {
+    if (!global._mongoClientPromise) {
+      const client = new MongoClient(uri);
+      global._mongoClientPromise = client.connect();
+    }
+    return global._mongoClientPromise;
+  } else {
+    if (!global._mongoClientPromise) {
+      const client = new MongoClient(uri);
+      global._mongoClientPromise = client.connect();
+    }
+    return global._mongoClientPromise;
+  }
+}
+
+async function getDb(): Promise<Db> {
+  const client = await getClientPromise();
+  return client.db('omnipost');
 }
 
 function getAccountsCollection(): Promise<Collection> {
