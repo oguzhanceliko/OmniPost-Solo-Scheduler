@@ -17,7 +17,8 @@ export async function publishToTikTok(
   }
 
   try {
-    // 1. Creator info sorgulayarak izin verilen gizlilik seviyesini bul (Sandbox için genellikle SELF_ONLY gereklidir)
+    // 1. TikTok Sandbox / Unaudited modunda uygulama sadece SELF_ONLY (Sadece Ben) gizlilik seviyesinde paylaşım yapabilir.
+    // PUBLIC_TO_EVERYONE denenirse TikTok "Please review our integration guidelines" hatası döndürür.
     let privacyLevel = 'SELF_ONLY';
     try {
       const creatorRes = await fetch(
@@ -31,15 +32,11 @@ export async function publishToTikTok(
         }
       );
       const creatorData = await creatorRes.json();
+      console.log('[TikTok Creator Info Response]', JSON.stringify(creatorData));
       const options = creatorData?.data?.privacy_level_options;
-      if (Array.isArray(options) && options.length > 0) {
-        if (options.includes('PUBLIC_TO_EVERYONE')) {
-          privacyLevel = 'PUBLIC_TO_EVERYONE';
-        } else if (options.includes('MUTUAL_FOLLOW_FRIENDS')) {
-          privacyLevel = 'MUTUAL_FOLLOW_FRIENDS';
-        } else if (options.includes('SELF_ONLY')) {
-          privacyLevel = 'SELF_ONLY';
-        }
+      // Onaylanmamış/Sandbox uygulamalar TikTok kuralları gereği SADECE SELF_ONLY kabul eder
+      if (Array.isArray(options) && options.includes('SELF_ONLY')) {
+        privacyLevel = 'SELF_ONLY';
       }
     } catch (cErr) {
       console.warn('[TikTok Creator Info Query]', cErr);
@@ -93,6 +90,7 @@ export async function publishToTikTok(
     );
 
     const initData = await initRes.json();
+    console.log('[TikTok Init Response]', JSON.stringify(initData));
     if (!initRes.ok || initData.error?.code !== 'ok') {
       const errMsg =
         initData.error?.message ||
