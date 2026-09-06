@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
         const thumbnail = oembedData?.thumbnail_url || undefined;
         const author = oembedData?.author_name || undefined;
 
-        // Video ID tespit et
+        // Video ID tespit et (playlist ve radio parametrelerini temizle)
         let videoId = '';
         if (cleanUrl.includes('shorts/')) {
           videoId = cleanUrl.split('shorts/')[1]?.split('?')[0]?.split('/')[0] || '';
@@ -62,9 +62,15 @@ export async function POST(req: NextRequest) {
           videoId = cleanUrl.split('youtu.be/')[1]?.split('?')[0] || '';
         }
 
-        // Hızlı ve güvenilir indirme portalları oluştur (Reklamsız ve doğrudan indirme)
-        const downloadUrl = `https://10downloader.com/download?v=${encodeURIComponent(cleanUrl)}`;
-        const directAlternative = videoId ? `https://y2down.cc/en/?url=${encodeURIComponent(cleanUrl)}` : undefined;
+        // Temiz YouTube URL'si (Playlist, radio vb. parametreleri temizle)
+        const pureUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : cleanUrl;
+
+        // 1. Önerilen: y2down.cc (Reklamsız ve hızlı)
+        const downloadUrl = `https://y2down.cc/en/?url=${encodeURIComponent(pureUrl)}`;
+        // 2. Alternatif: SaveFrom
+        const directAlternative = `https://en.savefrom.net/1-youtube-video-downloader-385/?url=${encodeURIComponent(pureUrl)}`;
+        // 3. Yedek: 10downloader (Artık temiz URL ile çağrıldığı için hata vermez)
+        const backupAlternative = `https://10downloader.com/download?v=${encodeURIComponent(pureUrl)}`;
 
         return NextResponse.json({
           success: true,
@@ -74,6 +80,7 @@ export async function POST(req: NextRequest) {
           author,
           downloadUrl,
           directAlternative,
+          backupAlternative,
           isExternalDownload: true,
         });
       } catch (e) {
