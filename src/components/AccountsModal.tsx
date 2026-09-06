@@ -12,7 +12,9 @@ import {
   KeyRound,
   Loader2,
   ShieldCheck,
+  BookOpen,
 } from 'lucide-react';
+import { AccountGuidePanel } from './AccountGuidePanel';
 
 interface AccountsModalProps {
   isOpen: boolean;
@@ -43,6 +45,7 @@ export function AccountsModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -121,7 +124,7 @@ export function AccountsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="w-full max-w-xl rounded-2xl bg-zinc-950 border border-zinc-800 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      <div className={`w-full ${isGuideOpen ? 'max-w-5xl' : 'max-w-xl'} rounded-2xl bg-zinc-950 border border-zinc-800 shadow-2xl overflow-hidden flex flex-col max-h-[88vh] transition-all duration-300`}>
         {/* Modal Başlık */}
         <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -130,16 +133,32 @@ export function AccountsModal({
               Bağlı Hesaplar & API Ayarları
             </h3>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsGuideOpen(!isGuideOpen)}
+              className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border transition ${
+                isGuideOpen
+                  ? 'bg-amber-400 text-black border-amber-400 font-semibold shadow-sm'
+                  : 'text-amber-400 hover:text-amber-300 bg-amber-950/40 hover:bg-amber-950/70 border-amber-800/60'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>{isGuideOpen ? 'Rehberi Kapat' : 'Nasıl Alınır? (Rehber)'}</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        {/* Modal İçerik */}
-        <div className="p-6 overflow-y-auto space-y-6">
+        {/* Modal İçerik ve Rehber Düzeni */}
+        <div className={`grid ${isGuideOpen ? 'grid-cols-1 md:grid-cols-12' : 'grid-cols-1'} flex-1 overflow-hidden min-h-0`}>
+          {/* Sol Panel: Hesap Listesi ve Form */}
+          <div className={`${isGuideOpen ? 'md:col-span-6 lg:col-span-7' : 'col-span-1'} p-6 overflow-y-auto space-y-6`}>
           {/* Bilgilendirme Notu */}
           <div className="flex items-start gap-2.5 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-xs text-zinc-400">
             <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
@@ -221,13 +240,25 @@ export function AccountsModal({
                   <KeyRound className="w-3.5 h-3.5 text-zinc-400" />
                   Yeni Hesap Tanımla
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setIsAdding(false)}
-                  className="text-xs text-zinc-400 hover:text-white"
-                >
-                  İptal
-                </button>
+                <div className="flex items-center gap-3">
+                  {!isGuideOpen && (
+                    <button
+                      type="button"
+                      onClick={() => setIsGuideOpen(true)}
+                      className="text-[11px] text-amber-400 hover:text-amber-300 flex items-center gap-1 underline underline-offset-2"
+                    >
+                      <BookOpen className="w-3 h-3" />
+                      <span>Token Rehberini Aç</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setIsAdding(false)}
+                    className="text-xs text-zinc-400 hover:text-white"
+                  >
+                    İptal
+                  </button>
+                </div>
               </div>
 
               {/* Platform Seçimi */}
@@ -390,6 +421,14 @@ export function AccountsModal({
                 </button>
               </div>
             </form>
+          )}
+          </div>
+
+          {/* Sağ Panel: Rehber Drawer / Panel */}
+          {isGuideOpen && (
+            <div className="col-span-1 md:col-span-6 lg:col-span-5 h-full overflow-hidden border-t md:border-t-0 md:border-l border-zinc-800 animate-in slide-in-from-right-4 duration-200">
+              <AccountGuidePanel initialPlatform={selectedPlatform} onClose={() => setIsGuideOpen(false)} />
+            </div>
           )}
         </div>
 
