@@ -39,13 +39,13 @@ export async function publishToInstagram(
 
     const creationId = createData.id;
 
-    // Adım 2: Video işleme durumunu bekle (polling, max 2 dakika)
+    // Adım 2: Video işleme durumunu bekle (polling, 2.5 sn aralıklarla)
     let isReady = false;
     let attempts = 0;
-    const maxAttempts = 24; // 24 * 5 sn = 120 sn
+    const maxAttempts = 36; // 36 * 2.5 sn = 90 sn
 
     while (!isReady && attempts < maxAttempts) {
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 2500));
       attempts++;
 
       const statusRes = await fetch(

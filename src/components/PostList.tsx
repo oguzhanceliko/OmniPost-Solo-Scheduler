@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScheduledPost, PostStatus } from '@/types';
 import { LogModal } from './LogModal';
 import {
@@ -26,6 +26,18 @@ export function PostList({ posts, isLoading, onRefresh }: PostListProps) {
   const [activeTab, setActiveTab] = useState<'ALL' | PostStatus>('ALL');
   const [activeLogPost, setActiveLogPost] = useState<ScheduledPost | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+
+  // Eğer listede yayınlanmakta olan (PROCESSING) gönderi varsa, 3 saniyede bir otomatik yenile
+  useEffect(() => {
+    const hasProcessing = posts.some((p) => p.status === 'PROCESSING');
+    if (!hasProcessing) return;
+
+    const timer = setInterval(() => {
+      onRefresh();
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, [posts, onRefresh]);
 
   const filteredPosts = posts.filter((p) => {
     if (activeTab === 'ALL') return true;

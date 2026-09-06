@@ -125,8 +125,10 @@ export function ScheduleForm({
       if (igCustom.trim()) custom_captions.instagram = igCustom.trim();
       if (ttCustom.trim()) custom_captions.tiktok = ttCustom.trim();
 
-      // Seçilen hesap isimlerini hazırla
-      const targetAccounts = accounts.filter((a) => selectedAccountIds.includes(a.id));
+      // Seçilen hesap isimlerini hazırla (YALNIZCA seçili platformlara ait olanlar)
+      const targetAccounts = accounts
+        .filter((a) => selectedPlatforms.includes(a.platform))
+        .filter((a) => selectedAccountIds.includes(a.id));
       const targetAccountNames = targetAccounts.map((a) => `${a.platform}: ${a.name}`);
 
       // 1. Gönderiyi oluştur
