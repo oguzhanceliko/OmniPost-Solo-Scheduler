@@ -37,7 +37,7 @@ export async function processPostPublication(
 
       if (platform === 'YOUTUBE') {
         const title = post.custom_captions?.youtube || post.caption;
-        const desc = post.caption;
+        const desc = post.description || post.caption;
         const ytResult = await publishToYouTube({
           videoUrl: post.video_url,
           title,

@@ -4,7 +4,7 @@ import { Readable } from 'stream';
 export interface YouTubeUploadParams {
   videoUrl: string;
   title: string;
-  description: string;
+  description?: string;
   clientId?: string;
   clientSecret?: string;
   refreshToken?: string;
@@ -37,8 +37,7 @@ export async function publishToYouTube(params: YouTubeUploadParams): Promise<{ s
     const buffer = Buffer.from(arrayBuffer);
     const videoStream = Readable.from(buffer);
 
-    // Prepare title (ensure #Shorts is included for best discovery)
-    const safeTitle = params.title.includes('#Shorts') ? params.title : `${params.title} #Shorts`;
+    const safeTitle = params.title;
 
     const res = await youtube.videos.insert({
       part: ['snippet', 'status'],

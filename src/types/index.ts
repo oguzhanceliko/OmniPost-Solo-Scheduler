@@ -35,6 +35,7 @@ export interface ScheduledPost {
   video_url: string;
   video_key: string;
   caption: string;
+  description?: string;
   custom_captions?: CustomCaptions;
   schedule_time: string; // ISO 8601 string
   platforms: Platform[];

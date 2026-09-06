@@ -34,6 +34,7 @@ export function ScheduleForm({
 }: ScheduleFormProps) {
   // Form State
   const [caption, setCaption] = useState('');
+  const [description, setDescription] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>([
     'YOUTUBE',
     'INSTAGRAM',
@@ -103,7 +104,7 @@ export function ScheduleForm({
       return;
     }
     if (!caption.trim()) {
-      setSubmitError('Lütfen video için ortak bir başlık/açıklama yazın.');
+      setSubmitError('Lütfen video için bir başlık yazın.');
       return;
     }
     if (!publishImmediately && !scheduleTime) {
@@ -136,6 +137,7 @@ export function ScheduleForm({
           video_url: uploadedUrl,
           video_key: uploadedKey,
           caption: caption.trim(),
+          description: description.trim() || undefined,
           custom_captions: Object.keys(custom_captions).length > 0 ? custom_captions : undefined,
           schedule_time: targetScheduleTime,
           platforms: selectedPlatforms,
@@ -160,6 +162,7 @@ export function ScheduleForm({
 
       // Başarılı, formu sıfırla
       setCaption('');
+      setDescription('');
       setYtCustom('');
       setIgCustom('');
       setTtCustom('');
@@ -180,28 +183,46 @@ export function ScheduleForm({
 
   return (
     <div className="space-y-6">
-      {/* Ortak Başlık & Açıklama */}
+      {/* Başlık */}
       <div className="space-y-2">
         <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
-          2. Ortak Başlık & Açıklama
+          2. Başlık
         </label>
-        <textarea
+        <input
+          type="text"
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
-          placeholder="Videonuz için başlık, açıklama ve hashtag'ler yazın... (Örn: Günlük vlogger ipuçları! #Shorts #Reels)"
+          placeholder="Videonuz için başlık yazın..."
+          className="w-full rounded-xl bg-zinc-900/80 border border-zinc-800 p-3.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition"
+        />
+        <div className="flex items-center justify-between text-[11px] text-zinc-500">
+          <span>YouTube: max 100 • TikTok: max 150 • Instagram: başlık yok (açıklamaya eklenir)</span>
+          <span>{caption.length} karakter</span>
+        </div>
+      </div>
+
+      {/* Açıklama */}
+      <div className="space-y-2">
+        <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          3. Açıklama
+        </label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Videonuz için açıklama ve hashtag'ler yazın..."
           rows={3}
           className="w-full rounded-xl bg-zinc-900/80 border border-zinc-800 p-3.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition resize-none"
         />
         <div className="flex items-center justify-between text-[11px] text-zinc-500">
-          <span>Tüm platformlar varsayılan olarak bu metni kullanır</span>
-          <span>{caption.length} karakter</span>
+          <span>YouTube açıklaması • Instagram & TikTok'ta başlıkla birleştirilir</span>
+          <span>{description.length} karakter</span>
         </div>
       </div>
 
       {/* Platform Seçimi */}
       <div className="space-y-3">
         <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
-          3. Hedef Platformlar & Hesap Seçimi
+          4. Hedef Platformlar & Hesap Seçimi
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* YouTube Shorts */}
@@ -498,7 +519,7 @@ export function ScheduleForm({
       {/* Tarih ve Zaman Seçici */}
       <div className="space-y-2">
         <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
-          4. Yayınlanma Zamanı
+          5. Yayınlanma Zamanı
         </label>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
