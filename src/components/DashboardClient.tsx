@@ -18,7 +18,7 @@ export default function DashboardClient() {
 
   const [posts, setPosts] = useState<ScheduledPost[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState<boolean>(true);
-  const [viewMode, setViewMode] = useState<'LIST' | 'CALENDAR'>('CALENDAR');
+  const [viewMode, setViewMode] = useState<'LIST' | 'CALENDAR'>('LIST');
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isAccountsModalOpen, setIsAccountsModalOpen] = useState<boolean>(false);
@@ -77,8 +77,6 @@ export default function DashboardClient() {
       <Header
         onOpenAccounts={() => setIsAccountsModalOpen(true)}
         onOpenDownloader={() => setIsDownloaderModalOpen(true)}
-        onToggleView={() => setViewMode((v) => (v === 'LIST' ? 'CALENDAR' : 'LIST'))}
-        currentView={viewMode}
         accountsCount={accounts.length}
       />
 
