@@ -56,7 +56,8 @@ export async function processPostPublication(
       }
 
       if (platform === 'INSTAGRAM') {
-        const caption = post.custom_captions?.instagram || post.caption;
+        const fullCaption = post.description ? `${post.caption}\n\n${post.description}` : post.caption;
+        const caption = post.custom_captions?.instagram || fullCaption;
         const igResult = await publishToInstagram({
           videoUrl: post.video_url,
           caption,
