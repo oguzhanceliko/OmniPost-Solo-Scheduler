@@ -1,18 +1,22 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { LogOut, Radio, Clock, Video, Download, Users } from 'lucide-react';
+import { LogOut, Clock, Video, Download, Users, Calendar } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface HeaderProps {
   onOpenDownloader?: () => void;
   onOpenAccounts?: () => void;
+  onToggleView?: () => void;
+  currentView?: 'LIST' | 'CALENDAR';
   accountsCount?: number;
 }
 
 export function Header({
   onOpenDownloader,
   onOpenAccounts,
+  onToggleView,
+  currentView = 'LIST',
   accountsCount = 0,
 }: HeaderProps) {
   const router = useRouter();
@@ -63,6 +67,20 @@ export function Header({
         </div>
 
         <div className="flex items-center gap-2.5 sm:gap-3">
+          {/* Takvim / Scheduler Butonu (Maliyet yerine) */}
+          <button
+            type="button"
+            onClick={onToggleView}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition ${
+              currentView === 'CALENDAR'
+                ? 'bg-amber-400 text-black border-amber-400 font-semibold shadow-sm'
+                : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-800 text-zinc-200 hover:text-white'
+            }`}
+          >
+            <Calendar className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Takvim</span>
+          </button>
+
           {/* Video İndir Butonu */}
           <button
             type="button"
@@ -87,11 +105,6 @@ export function Header({
               </span>
             )}
           </button>
-
-          <div className="hidden lg:flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-xs text-zinc-400">
-            <Radio className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
-            <span>0 Maliyet</span>
-          </div>
 
           <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-300">
             <Clock className="w-3.5 h-3.5 text-zinc-400" />
