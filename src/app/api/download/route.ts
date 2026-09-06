@@ -65,12 +65,12 @@ export async function POST(req: NextRequest) {
         // Temiz YouTube URL'si (Playlist, radio vb. parametreleri temizle)
         const pureUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : cleanUrl;
 
-        // 1. Önerilen: y2down.cc (Reklamsız ve hızlı)
-        const downloadUrl = `https://y2down.cc/en/?url=${encodeURIComponent(pureUrl)}`;
-        // 2. Alternatif: SaveFrom
-        const directAlternative = `https://en.savefrom.net/1-youtube-video-downloader-385/?url=${encodeURIComponent(pureUrl)}`;
-        // 3. Yedek: 10downloader (Artık temiz URL ile çağrıldığı için hata vermez)
-        const backupAlternative = `https://10downloader.com/download?v=${encodeURIComponent(pureUrl)}`;
+        // 1. Önerilen: ssyt.rip (Hızlı, temiz ve güncel)
+        const downloadUrl = `https://ssyt.rip/en2/?url=${encodeURIComponent(pureUrl)}`;
+        // 2. Alternatif: y2down.cc
+        const directAlternative = `https://y2down.cc/en/?url=${encodeURIComponent(pureUrl)}`;
+        // 3. Yedek Alternatif: SaveFrom
+        const backupAlternative = `https://en.savefrom.net/1-youtube-video-downloader-385/?url=${encodeURIComponent(pureUrl)}`;
 
         return NextResponse.json({
           success: true,
@@ -78,6 +78,7 @@ export async function POST(req: NextRequest) {
           title: videoTitle,
           thumbnail,
           author,
+          pureUrl,
           downloadUrl,
           directAlternative,
           backupAlternative,

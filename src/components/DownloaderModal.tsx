@@ -22,10 +22,12 @@ export function DownloaderModal({ isOpen, onClose }: DownloaderModalProps) {
   const [url, setUrl] = useState('');
   const [isResolving, setIsResolving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [resolvedVideo, setResolvedVideo] = useState<{
     downloadUrl: string;
     directAlternative?: string;
     backupAlternative?: string;
+    pureUrl?: string;
     title: string;
     platform: string;
     thumbnail?: string;
@@ -39,6 +41,7 @@ export function DownloaderModal({ isOpen, onClose }: DownloaderModalProps) {
       setError(null);
       setResolvedVideo(null);
       setUrl('');
+      setCopiedLink(false);
     }
   }, [isOpen]);
 
@@ -219,6 +222,15 @@ export function DownloaderModal({ isOpen, onClose }: DownloaderModalProps) {
                     href={resolvedVideo.downloadUrl}
                     target="_blank"
                     rel="noreferrer"
+                    onClick={() => {
+                      if (resolvedVideo.platform === 'YOUTUBE' && resolvedVideo.pureUrl) {
+                        try {
+                          navigator.clipboard.writeText(resolvedVideo.pureUrl);
+                          setCopiedLink(true);
+                          setTimeout(() => setCopiedLink(false), 4000);
+                        } catch {}
+                      }
+                    }}
                     download={resolvedVideo.platform === 'TIKTOK'}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs transition"
                   >
@@ -227,7 +239,7 @@ export function DownloaderModal({ isOpen, onClose }: DownloaderModalProps) {
                       {resolvedVideo.platform === 'TIKTOK'
                         ? 'Filigransız Doğrudan MP4 İndir'
                         : resolvedVideo.platform === 'YOUTUBE'
-                        ? 'y2down.cc ile Hızlı İndir (Önerilen)'
+                        ? 'SSYouTube (ssyt.rip) ile İndir (Önerilen)'
                         : 'Orijinal Kalitede İndir (.mp4)'}
                     </span>
                     <ExternalLink className="w-3 h-3 text-black/70" />
@@ -241,12 +253,19 @@ export function DownloaderModal({ isOpen, onClose }: DownloaderModalProps) {
                       className="flex items-center justify-center gap-1 py-2 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs transition"
                     >
                       <span>
-                        {resolvedVideo.platform === 'YOUTUBE' ? 'SaveFrom Alternatifi' : 'Alternatif İndirici'}
+                        {resolvedVideo.platform === 'YOUTUBE' ? 'y2down.cc Alternatifi' : 'Alternatif İndirici'}
                       </span>
                       <ExternalLink className="w-3 h-3 text-zinc-400" />
                     </a>
                   )}
                 </div>
+
+                {copiedLink && (
+                  <div className="text-[11px] text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 rounded px-2.5 py-1.5 flex items-center gap-1.5 animate-in fade-in">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                    <span>Temiz video linki panoya kopyalandı! Açılan sayfada Yapıştır'a tıklayabilirsiniz.</span>
+                  </div>
+                )}
 
                 {resolvedVideo.backupAlternative && (
                   <div className="flex items-center justify-end">
@@ -256,7 +275,7 @@ export function DownloaderModal({ isOpen, onClose }: DownloaderModalProps) {
                       rel="noreferrer"
                       className="text-[11px] text-zinc-500 hover:text-zinc-300 underline flex items-center gap-1"
                     >
-                      <span>Yedek servis: 10Downloader portalını aç</span>
+                      <span>Yedek servis: SaveFrom portalını aç</span>
                       <ExternalLink className="w-2.5 h-2.5" />
                     </a>
                   </div>
